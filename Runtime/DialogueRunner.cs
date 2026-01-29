@@ -44,6 +44,7 @@ namespace Yarn.Unity
     [AddComponentMenu("Scripts/Yarn Spinner/Dialogue Runner"), HelpURL("https://yarnspinner.dev/docs/unity/components/dialogue-runner/")]
     public class DialogueRunner : MonoBehaviour
     {
+        // public static int Loading = 0;
         /// <summary>
         /// Represents the result of attempting to locate and call a command.
         /// </summary>
@@ -295,6 +296,64 @@ namespace Yarn.Unity
                         break;
                     }
                 }
+            }
+        }
+
+        public void ResumeDialogue(string startNode, int state)
+        {
+            // If the dialogue is currently executing instructions, then
+            // calling ContinueDialogue() at the end of this method will
+            // cause confusing results. Report an error and stop here.
+            if (Dialogue.IsActive) 
+            {
+                Debug.LogError($"Can't start dialogue from node {startNode}: the dialogue is currently in the middle of running. Stop the dialogue first.");
+                return;
+            }
+
+            // Stop any processes that might be running already
+            foreach (var dialogueView in dialogueViews)
+            {
+                if (dialogueView == null || dialogueView.isActiveAndEnabled == false) 
+                {
+                    continue;
+                }
+
+                dialogueView.StopAllCoroutines();
+            }
+
+            // Get it going
+
+            // Mark that we're in conversation.
+            IsDialogueRunning = true;
+
+            // Signal that we're starting up.
+            foreach (var dialogueView in dialogueViews)
+            {
+                if (dialogueView == null || dialogueView.isActiveAndEnabled == false)
+                {
+                    continue;
+                }
+
+                dialogueView.DialogueStarted();
+            }
+
+            // Request that the dialogue select the current node. This
+            // will prepare the dialogue for running; as a side effect,
+            // our prepareForLines delegate may be called.
+            Dialogue.SetNode(startNode);
+
+            if (lineProvider.LinesAvailable == false)
+            {
+                // The line provider isn't ready to give us our lines
+                // yet. We need to start a coroutine that waits for
+                // them to finish loading, and then runs the dialogue.
+                StartCoroutine(ContinueDialogueWhenLinesAvailable());
+            }
+            else
+            {
+                CurrentLine = null;
+                Dialogue.vm.state.programCounter = state;
+                Dialogue.Continue();
             }
         }
 
@@ -858,6 +917,12 @@ namespace Yarn.Unity
 
         void HandleCommand(Command command)
         {
+            // if (Loading-- > 0) {
+            //     print("skip "+command.Text);
+            //     print("skip cmd, left " + Loading);
+            //     ContinueDialogue();
+            //     return;
+            // }
             CommandDispatchResult dispatchResult;
 
             // Try looking in the command handlers first
