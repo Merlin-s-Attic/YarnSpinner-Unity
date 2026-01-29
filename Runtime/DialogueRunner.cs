@@ -44,7 +44,6 @@ namespace Yarn.Unity
     [AddComponentMenu("Scripts/Yarn Spinner/Dialogue Runner"), HelpURL("https://yarnspinner.dev/docs/unity/components/dialogue-runner/")]
     public class DialogueRunner : MonoBehaviour
     {
-        // public static int Loading = 0;
         /// <summary>
         /// Represents the result of attempting to locate and call a command.
         /// </summary>
@@ -299,7 +298,7 @@ namespace Yarn.Unity
             }
         }
 
-        public void ResumeDialogue(string startNode, int state)
+        public void ResumeDialogue(string startNode, int pc)
         {
             // If the dialogue is currently executing instructions, then
             // calling ContinueDialogue() at the end of this method will
@@ -352,7 +351,7 @@ namespace Yarn.Unity
             else
             {
                 CurrentLine = null;
-                Dialogue.vm.state.programCounter = state;
+                Dialogue.vm.state.programCounter = pc;
                 Dialogue.Continue();
             }
         }
