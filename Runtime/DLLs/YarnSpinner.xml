@@ -700,6 +700,15 @@
             <remarks>If <see cref="M:Yarn.Dialogue.Continue"/> has never been called, this value
             will be <see langword="null"/>.</remarks>
         </member>
+        <member name="P:Yarn.Dialogue.ProgramCounter">
+            <summary>
+            Gets or sets the index of the instruction that this Dialogue will
+            execute next within <see cref="P:Yarn.Dialogue.CurrentNode"/>.
+            </summary>
+            <remarks>Merlin's Attic fork addition: saving a game mid-node needs
+            to record and later restore the exact instruction to resume
+            from.</remarks>
+        </member>
         <member name="M:Yarn.Dialogue.GetStringIDForNode(System.String)">
             <summary>
             Returns the string ID that contains the original, uncompiled source

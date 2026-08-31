@@ -1050,7 +1050,30 @@ namespace Yarn.Unity
         /// <remarks><paramref name="nodeName"/> must be the name of a node in
         /// <see cref="YarnProject"/>.</remarks>
         /// <param name="nodeName">The name of the node to run.</param>
-        public async YarnTask StartDialogue(string nodeName)
+        public YarnTask StartDialogue(string nodeName)
+        {
+            return RunDialogue(nodeName, null);
+        }
+
+        /// <summary>
+        /// Starts running a node of dialogue, picking up at a specific
+        /// instruction rather than at the start of the node.
+        /// </summary>
+        /// <remarks>Merlin's Attic fork addition: restoring a save that was
+        /// taken mid-conversation needs to resume from the line the player was
+        /// on, not from the top of the node. Pair this with <see
+        /// cref="Yarn.Dialogue.ProgramCounter"/>, which is what produced
+        /// <paramref name="programCounter"/> when the game was
+        /// saved.</remarks>
+        /// <param name="nodeName">The name of the node to run.</param>
+        /// <param name="programCounter">The index of the instruction within
+        /// <paramref name="nodeName"/> to resume from.</param>
+        public YarnTask ResumeDialogue(string nodeName, int programCounter)
+        {
+            return RunDialogue(nodeName, programCounter);
+        }
+
+        private async YarnTask RunDialogue(string nodeName, int? programCounter)
         {
             if (yarnProject == null)
             {
@@ -1092,6 +1115,13 @@ namespace Yarn.Unity
                 tasks.Add(view.OnDialogueStartedAsync());
             }
             await YarnTask.WhenAll(tasks);
+
+            // Set after SetNode, which resets the program counter, and after
+            // the presenters have started, so nothing can rewind us again.
+            if (programCounter.HasValue)
+            {
+                Dialogue.ProgramCounter = programCounter.Value;
+            }
 
             Dialogue.Continue();
         }
